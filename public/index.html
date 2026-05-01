@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Discovery Workshop</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#111827;min-height:100vh}
+input,select,textarea,button{font-family:inherit}
+.setup{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:linear-gradient(135deg,#EFF6FF 0%,#f8fafc 100%)}
+.setup-card{width:100%;max-width:480px;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(26,86,219,.12);padding:2.5rem}
+.setup-logo{font-size:12px;font-weight:700;color:#1a56db;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;text-align:center}
+.setup-title{font-size:26px;font-weight:700;color:#1e3a5f;margin-bottom:6px;text-align:center}
+.setup-sub{font-size:13px;color:#6b7280;margin-bottom:2rem;text-align:center}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:1rem}
+.field label{font-size:13px;font-weight:500;color:#374151}
+.field input,.field select{padding:9px 12px;border-radius:8px;border:1px solid #d1d5db;background:#f9fafb;font-size:13px;color:#111827;width:100%}
+.field input:focus,.field select:focus{outline:none;border-color:#1a56db}
+.btn-primary{background:#1a56db;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;padding:12px;margin-top:.5rem;transition:background .15s}
+.btn-primary:hover{background:#1e40af}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.session-id{text-align:center;margin-top:10px;font-size:11px;color:#9ca3af}
+.topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.topbar-left{font-size:13px;font-weight:700;color:#1a56db}
+.topbar-sub{font-size:11px;color:#9ca3af}
+.topbar-right{font-size:11px;color:#6b7280;text-align:right}
+.topbar-right strong{display:block;font-size:12px}
+.main{max-width:680px;margin:0 auto;padding:1.5rem 1rem}
+.progress-wrap{margin-bottom:1.25rem}
+.progress-bar{height:4px;background:#e5e7eb;border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:#1a56db;border-radius:2px;transition:width .5s ease}
+.progress-label{display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:#9ca3af}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:20px;font-size:12px;background:#EFF6FF;color:#1e40af;border:1px solid #BFDBFE;margin-bottom:.75rem}
+.pill-dot{width:7px;height:7px;border-radius:50%;background:#1a56db;flex-shrink:0}
+.card{background:#fff;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:.75rem;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-main{border:1px solid #BFDBFE}
+.card-ai{border:1px solid #DDD6FE}
+.qmeta{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.qnum{font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em}
+.badge{font-size:11px;border-radius:20px;padding:1px 8px;font-weight:600}
+.badge-main{background:#EFF6FF;color:#1a56db;border:1px solid #BFDBFE}
+.badge-ai{background:#F5F3FF;color:#7c3aed;border:1px solid #DDD6FE}
+.qtext{font-size:15px;font-weight:500;color:#111827;margin-bottom:12px;line-height:1.55}
+.hint{font-size:12px;color:#9ca3af;margin-bottom:10px;font-style:italic}
+.multi-note{font-size:11px;color:#1a56db;font-weight:600;margin-bottom:8px}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{text-align:left;padding:10px 12px;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;color:#111827;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s;width:100%}
+.opt:hover{border-color:#93C5FD;background:#EFF6FF}
+.opt.sel{background:#EFF6FF;border-color:#1a56db;color:#1e40af}
+.chk{width:17px;height:17px;border-radius:4px;border:1.5px solid #d1d5db;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;transition:all .15s}
+.opt.sel .chk{background:#1a56db;border-color:#1a56db}
+.other-input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #BFDBFE;background:#EFF6FF;color:#1e40af;font-size:13px;margin-top:4px}
+.other-input:focus{outline:none;border-color:#1a56db}
+.text-input{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;color:#111827;font-size:13px;resize:vertical;min-height:72px;line-height:1.5}
+.text-input:focus{outline:none;border-color:#1a56db}
+.btn-next{background:#1a56db;color:#fff;border:none;padding:9px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-top:.75rem;transition:background .15s}
+.btn-next:hover{background:#1e40af}
+.btn-next:disabled{opacity:.4;cursor:not-allowed}
+.ai-loading{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:12px;margin-bottom:.75rem;font-size:13px;color:#7c3aed}
+.spinner{width:18px;height:18px;border:2px solid #DDD6FE;border-top-color:#7c3aed;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.topic-done{background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;padding:12px 16px;margin-bottom:.75rem;display:flex;align-items:center;gap:10px;font-size:13px;color:#065f46}
+.btn-continue{background:#059669;color:#fff;border:none;padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-left:auto;white-space:nowrap}
+.done-card{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:14px;padding:2rem;text-align:center;margin-bottom:1.25rem}
+.done-icon{font-size:40px;margin-bottom:10px}
+.done-title{font-size:20px;font-weight:700;color:#1e3a5f;margin-bottom:6px}
+.done-sub{font-size:14px;color:#1e40af;margin-bottom:1.5rem}
+.export-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn-export{background:transparent;padding:9px 18px;border-radius:8px;border:1px solid;font-size:13px;font-weight:500;cursor:pointer}
+.btn-word{border-color:#1d6f42;color:#1d6f42}.btn-word:hover{background:#f0fdf4}
+.btn-csv{border-color:#1a56db;color:#1a56db}.btn-csv:hover{background:#EFF6FF}
+.log-section{margin-top:1.5rem}
+.log-label{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem}
+.log-row{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:12px}
+.log-num{color:#9ca3af;font-size:11px;padding-top:1px}
+.log-q{color:#6b7280;margin-bottom:2px}
+.log-a{color:#111827;font-weight:500}
+.log-tag{font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.tag-ai{color:#7c3aed}
+.tag-open{color:#1a56db}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen" class="setup">
+  <div class="setup-card">
+    <div class="setup-logo">SAP</div>
+    <div class="setup-title">Discovery Workshop</div>
+    <div class="setup-sub">Complete the details below to begin your session</div>
+    <div class="field"><label>Consultant name</label><input id="f-consultant" placeholder="Your full name" oninput="checkSetup()"/></div>
+    <div class="field"><label>Customer / Organisation</label><input id="f-customer" placeholder="Customer name" oninput="checkSetup()"/></div>
+    <div class="field"><label>SAP Module</label>
+      <select id="f-module" onchange="checkSetup()">
+        <option value="">Select a module...</option>
+        <option value="WM">SAP WM — Warehouse Management</option>
+        <option value="FICO">SAP FI/CO — Finance & Controlling</option>
+        <option value="MM">SAP MM — Materials Management</option>
+        <option value="SD">SAP SD — Sales & Distribution</option>
+        <option value="PP">SAP PP — Production Planning</option>
+        <option value="HR">SAP HR/HCM — Human Capital Management</option>
+        <option value="SAC">SAP Analytics Cloud — Planning & Analytics</option>
+      </select>
+    </div>
+    <div class="field"><label>Date</label><input id="f-date" type="date" oninput="checkSetup()"/></div>
+    <button class="btn-primary" id="start-btn" onclick="startWorkshop()" disabled>Start Workshop →</button>
+    <div class="session-id" id="session-display"></div>
+  </div>
+</div>
+
+<!-- WORKSHOP SCREEN -->
+<div id="workshop-screen" style="display:none;min-height:100vh">
+  <div class="topbar">
+    <div>
+      <div class="topbar-left">Discovery Workshop</div>
+      <div class="topbar-sub" id="tb-module"></div>
+    </div>
+    <div class="topbar-right">
+      <strong id="tb-customer"></strong>
+      <span id="tb-meta"></span>
+    </div>
+  </div>
+  <div class="main" id="main-content"></div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+var state = {
+  meta: {},
+  moduleKey: '',
+  moduleLabel: '',
+  topics: [],
+  topicIndex: 0,
+  responses: [],
+  topicResponses: [],
+  currentQ: null,        // null = show seed question
+  topicDone: false,
+  aiLoading: false,
+  selected: new Set(),
+  otherActive: false,
+  otherValue: '',
+  textValue: ''
+}
+
+// ── Setup ──────────────────────────────────────────────────────────────────
+function makeSessionId() {
+  var d = new Date()
+  return 'DS-' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes())
+}
+function pad(n) { return String(n).padStart(2,'0') }
+
+document.getElementById('f-date').value = new Date().toISOString().split('T')[0]
+document.getElementById('session-display').textContent = 'Session: ' + makeSessionId()
+
+function checkSetup() {
+  var ok = document.getElementById('f-consultant').value.trim() &&
+            document.getElementById('f-customer').value.trim() &&
+            document.getElementById('f-module').value &&
+            document.getElementById('f-date').value
+  document.getElementById('start-btn').disabled = !ok
+}
+
+function startWorkshop() {
+  var sel = document.getElementById('f-module')
+  state.meta = {
+    consultant: document.getElementById('f-consultant').value.trim(),
+    customer: document.getElementById('f-customer').value.trim(),
+    date: document.getElementById('f-date').value,
+    session: makeSessionId()
+  }
+  state.moduleKey = sel.value
+  state.moduleLabel = sel.options[sel.selectedIndex].text
+
+  // Load topics from server
+  fetch('/api/topics/' + state.moduleKey)
+    .then(function(r){ return r.json() })
+    .then(function(topics){
+      state.topics = topics
+      state.topicIndex = 0
+      state.responses = []
+      state.topicResponses = []
+      state.currentQ = null
+      state.topicDone = false
+      document.getElementById('setup-screen').style.display = 'none'
+      document.getElementById('workshop-screen').style.display = 'block'
+      document.getElementById('tb-module').textContent = state.moduleLabel
+      document.getElementById('tb-customer').textContent = state.meta.customer
+      document.getElementById('tb-meta').textContent = state.meta.consultant + ' · ' + state.meta.date
+      render()
+    })
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function render() {
+  var el = document.getElementById('main-content')
+  el.innerHTML = buildHTML()
+  window.scrollTo(0,0)
+}
+
+function buildHTML() {
+  var html = ''
+  var done = state.topicIndex >= state.topics.length
+
+  // Progress bar
+  if (!done) {
+    var pct = Math.min(Math.round(state.responses.length / Math.max(state.topics.length * 3, 1) * 100), 95)
+    html += '<div class="progress-wrap">' +
+      '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+      '<div class="progress-label"><span>' + state.responses.length + ' responses captured</span><span>' + (state.responses.length > 0 ? 'In progress' : 'Starting') + '</span></div>' +
+      '</div>'
+  }
+
+  // Topic done nudge
+  if (state.topicDone && !done) {
+    var nextTopic = state.topics[state.topicIndex]
+    html += '<div class="topic-done">' +
+      '<span style="font-size:18px">✓</span>' +
+      '<div><strong>' + state.topics[state.topicIndex - 1].label + '</strong> fully covered.' +
+      (nextTopic ? ' Ready for: <strong>' + nextTopic.label + '</strong>' : '') + '</div>' +
+      '<button class="btn-continue" onclick="goNextTopic()">' + (nextTopic ? 'Next topic →' : 'Finish →') + '</button>' +
+      '</div>'
+  }
+
+  // AI loading
+  if (state.aiLoading) {
+    html += '<div class="ai-loading"><span class="spinner"></span>Analysing response and generating next blueprint question...</div>'
+  }
+
+  // Active question
+  if (!state.aiLoading && !state.topicDone && !done) {
+    var topic = state.topics[state.topicIndex]
+    html += '<div class="pill"><span class="pill-dot"></span>Topic ' + (state.topicIndex + 1) + ' of ' + state.topics.length + ': <strong style="margin-left:3px">' + topic.label + '</strong></div>'
+
+    if (!state.currentQ) {
+      // Seed question
+      html += '<div class="card card-main">' +
+        '<div class="qmeta"><span class="qnum">Question ' + (state.responses.length + 1) + '</span><span class="badge badge-main">Opening question</span></div>' +
+        '<div class="qtext">' + topic.question + '</div>' +
+        buildMultiSelect(topic.options, 'seed') +
+        '<button class="btn-next" id="next-btn" onclick="submitSeed()" disabled>Next →</button>' +
+        '</div>'
+    } else {
+      // AI follow-up
+      var q = state.currentQ
+      html += '<div class="card card-ai">' +
+        '<div class="qmeta"><span class="qnum">Question ' + (state.responses.length + 1) + '</span><span class="badge badge-ai">✦ AI follow-up</span></div>' +
+        '<div class="qtext">' + q.question + '</div>' +
+        (q.hint ? '<div class="hint">' + q.hint + '</div>' : '')
+
+      if (q.type === 'text') {
+        html += '<textarea class="text-input" id="text-ans" placeholder="' + (q.hint || 'Type your answer here...') + '" oninput="onTextInput()">' + state.textValue + '</textarea>' +
+          '<button class="btn-next" id="next-btn" onclick="submitAI()" ' + (state.textValue.trim() ? '' : 'disabled') + '>Save answer</button>'
+      } else {
+        html += buildMultiSelect(q.options, 'ai') +
+          '<button class="btn-next" id="next-btn" onclick="submitAI()" disabled>Next →</button>'
+      }
+      html += '</div>'
+    }
+  }
+
+  // Done screen
+  if (done) {
+    html += '<div class="done-card">' +
+      '<div class="done-icon">✓</div>' +
+      '<div class="done-title">Workshop complete</div>' +
+      '<div class="done-sub">' + state.topics.length + ' topics · ' + state.responses.length + ' questions answered</div>' +
+      '<div class="export-row">' +
+      '<button class="btn-export btn-word" onclick="exportWord()">↓ Word Blueprint (.doc)</button>' +
+      '<button class="btn-export btn-csv" onclick="exportCSV()">↓ Excel Data (.csv)</button>' +
+      '</div></div>'
+  }
+
+  // Session log
+  if (state.responses.length > 0) {
+    html += '<div class="log-section"><div class="log-label">Session log (' + state.responses.length + ')</div>'
+    state.responses.forEach(function(r, i) {
+      html += '<div class="log-row">' +
+        '<span class="log-num">' + (i+1) + '</span>' +
+        '<div><div class="log-q">' + r.question + '</div>' +
+        '<div class="log-a">' + r.answer + '</div>' +
+        '<div class="log-tag ' + (r.phase === 'ai' ? 'tag-ai' : 'tag-open') + '">' + r.topic_label + ' · ' + (r.phase === 'ai' ? 'AI follow-up' : 'Opening') + '</div>' +
+        '</div></div>'
+    })
+    html += '</div>'
+  }
+
+  return html
+}
+
+function buildMultiSelect(options, prefix) {
+  var html = '<div class="multi-note">Select all that apply — then click Next</div><div class="opts">'
+  options.forEach(function(opt, i) {
+    var sel = state.selected.has(i)
+    html += '<button class="opt' + (sel ? ' sel' : '') + '" onclick="toggleOpt(' + i + ')">' +
+      '<span class="chk">' + (sel ? '✓' : '') + '</span>' + opt + '</button>'
+  })
+  // Other option
+  var otherSel = state.otherActive
+  html += '<button class="opt' + (otherSel ? ' sel' : '') + '" onclick="toggleOther()" style="font-style:italic;color:' + (otherSel ? '' : '#6b7280') + '">' +
+    '<span class="chk">' + (otherSel ? '✓' : '') + '</span>Other — describe your situation</button>'
+  if (state.otherActive) {
+    html += '<input class="other-input" id="other-inp" value="' + escAttr(state.otherValue) + '" placeholder="Type here..." oninput="onOtherInput(this.value)"/>'
+  }
+  html += '</div>'
+  return html
+}
+
+function escAttr(s) { return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;') }
+
+// ── Interactions ───────────────────────────────────────────────────────────
+function toggleOpt(i) {
+  if (state.selected.has(i)) state.selected.delete(i)
+  else state.selected.add(i)
+  updateNextBtn()
+  renderSelections()
+}
+
+function toggleOther() {
+  state.otherActive = !state.otherActive
+  if (!state.otherActive) state.otherValue = ''
+  updateNextBtn()
+  render()
+  if (state.otherActive) {
+    var el = document.getElementById('other-inp')
+    if (el) el.focus()
+  }
+}
+
+function onOtherInput(val) {
+  state.otherValue = val
+  updateNextBtn()
+}
+
+function onTextInput() {
+  var el = document.getElementById('text-ans')
+  if (el) state.textValue = el.value
+  var btn = document.getElementById('next-btn')
+  if (btn) btn.disabled = !state.textValue.trim()
+}
+
+function renderSelections() {
+  document.querySelectorAll('.opt').forEach(function(btn, i) {
+    if (i < (state.currentQ ? (state.currentQ.options || []).length : state.topics[state.topicIndex].options.length)) {
+      var sel = state.selected.has(i)
+      btn.className = 'opt' + (sel ? ' sel' : '')
+      btn.querySelector('.chk').textContent = sel ? '✓' : ''
+    }
+  })
+  updateNextBtn()
+}
+
+function updateNextBtn() {
+  var btn = document.getElementById('next-btn')
+  if (!btn) return
+  var hasAns = state.selected.size > 0 || (state.otherActive && state.otherValue.trim())
+  btn.disabled = !hasAns
+}
+
+function getSelections(options) {
+  var result = []
+  state.selected.forEach(function(i) { if (options && options[i]) result.push(options[i]) })
+  if (state.otherActive && state.otherValue.trim()) result.push('Other: ' + state.otherValue.trim())
+  return result
+}
+
+function resetSelections() {
+  state.selected = new Set()
+  state.otherActive = false
+  state.otherValue = ''
+  state.textValue = ''
+}
+
+// ── Submit ─────────────────────────────────────────────────────────────────
+function submitSeed() {
+  var topic = state.topics[state.topicIndex]
+  var sels = getSelections(topic.options)
+  if (!sels.length) return
+  submitAnswer(topic.question, sels.join(' | '))
+}
+
+function submitAI() {
+  var q = state.currentQ
+  if (!q) return
+  var answer = ''
+  if (q.type === 'text') {
+    answer = state.textValue.trim()
+    if (!answer) return
+  } else {
+    var sels = getSelections(q.options)
+    if (!sels.length) return
+    answer = sels.join(' | ')
+  }
+  submitAnswer(q.question, answer)
+}
+
+function submitAnswer(question, answer) {
+  var topic = state.topics[state.topicIndex]
+  var resp = {
+    topic_id: topic.id,
+    topic_label: topic.label,
+    question: question,
+    answer: answer,
+    phase: state.currentQ ? 'ai' : 'seed'
+  }
+  state.topicResponses.push(resp)
+  state.responses.push(resp)
+  state.currentQ = null
+  resetSelections()
+  state.aiLoading = true
+  render()
+
+  fetch('/api/followup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      module_key: state.moduleKey,
+      topic_id: topic.id,
+      topic_responses: state.topicResponses,
+      all_responses: state.responses
+    })
+  })
+  .then(function(r){ return r.json() })
+  .then(function(data) {
+    state.aiLoading = false
+    if (data.topic_complete) {
+      state.topicDone = true
+      state.topicIndex++
+    } else {
+      state.currentQ = data
+    }
+    render()
+  })
+  .catch(function() {
+    state.aiLoading = false
+    state.currentQ = {
+      question: 'What is the main challenge or constraint for ' + topic.label + ' that SAP needs to solve?',
+      type: 'text',
+      hint: 'e.g. manual process taking 3 days, data in multiple systems, no visibility'
+    }
+    render()
+  })
+}
+
+function goNextTopic() {
+  state.topicDone = false
+  state.topicResponses = []
+  state.currentQ = null
+  resetSelections()
+  render()
+}
+
+// ── Exports ────────────────────────────────────────────────────────────────
+function exportCSV() {
+  fetch('/api/export-csv', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ meta: state.meta, responses: state.responses, module_label: state.moduleLabel })
+  })
+  .then(function(r){ return r.blob() })
+  .then(function(blob) {
+    var a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = 'Workshop_' + state.meta.customer.replace(/\s+/g,'_') + '_' + state.meta.date + '.csv'
+    a.click()
+  })
+}
+
+function exportWord() {
+  fetch('/api/export-word', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ meta: state.meta, responses: state.responses, module_label: state.moduleLabel, scenario: state.moduleLabel })
+  })
+  .then(function(r){ return r.blob() })
+  .then(function(blob) {
+    var a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = 'Blueprint_' + state.meta.customer.replace(/\s+/g,'_') + '_' + state.meta.date + '.doc'
+    a.click()
+  })
+}
+
+// Handle ?topic= URL param
+(function() {
+  var params = new URLSearchParams(window.location.search)
+  var t = params.get('topic')
+  if (t) {
+    var sel = document.getElementById('f-module')
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === t) { sel.selectedIndex = i; checkSetup(); break; }
+    }
+  }
+})()
+</script>
+</body>
+</html>
