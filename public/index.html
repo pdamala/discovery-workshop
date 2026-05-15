@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Discovery Workshop</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#111827;min-height:100vh}
+input,select,textarea,button{font-family:inherit}
+
+/* ── Setup ── */
+.setup{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:linear-gradient(135deg,#EFF6FF 0%,#f8fafc 100%)}
+.setup-card{width:100%;max-width:500px;background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(26,86,219,.12);padding:2.5rem}
+.setup-logo{font-size:11px;font-weight:700;color:#1a56db;letter-spacing:.12em;text-transform:uppercase;text-align:center;margin-bottom:10px}
+.setup-title{font-size:26px;font-weight:700;color:#1e3a5f;text-align:center;margin-bottom:6px}
+.setup-sub{font-size:13px;color:#6b7280;text-align:center;margin-bottom:2rem}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:1rem}
+.field label{font-size:13px;font-weight:500;color:#374151}
+.finput{padding:9px 12px;border-radius:8px;border:1px solid #d1d5db;background:#f9fafb;font-size:13px;color:#111827;width:100%}
+.finput:focus{outline:none;border-color:#1a56db}
+.prob-input{padding:10px 12px;border-radius:8px;border:1px solid #d1d5db;background:#f9fafb;font-size:13px;color:#111827;width:100%;resize:vertical;min-height:90px;line-height:1.5}
+.prob-input:focus{outline:none;border-color:#1a56db}
+.btn-start{background:#1a56db;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;width:100%;padding:13px;margin-top:.5rem;transition:background .15s}
+.btn-start:hover{background:#1e40af}
+.btn-start:disabled{opacity:.4;cursor:not-allowed}
+.setup-sid{text-align:center;margin-top:10px;font-size:11px;color:#9ca3af}
+
+/* ── Workshop ── */
+#workshop{display:none;min-height:100vh;flex-direction:column}
+.topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:10px 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.tb-left .tb-title{font-size:13px;font-weight:700;color:#1a56db}
+.tb-left .tb-sub{font-size:11px;color:#9ca3af;margin-top:1px}
+.tb-actions{display:flex;gap:8px;align-items:center}
+.btn-pause{background:transparent;border:1px solid #f59e0b;color:#b45309;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-pause:hover{background:#fffbeb}
+.btn-pause:disabled{opacity:.35;cursor:not-allowed}
+.btn-stop{background:#ef4444;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-stop:hover{background:#dc2626}
+.btn-stop:disabled{opacity:.35;cursor:not-allowed}
+.tb-right{font-size:11px;color:#6b7280;text-align:right;flex-shrink:0}
+.tb-right strong{display:block;font-size:12px;color:#374151}
+
+.main{max-width:680px;margin:0 auto;padding:1.5rem 1rem;width:100%}
+
+/* Context banner */
+.ctx-banner{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#1e40af;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctx-chip{background:#fff;border:1px solid #BFDBFE;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:500}
+
+/* Progress */
+.prog-wrap{margin-bottom:1.25rem}
+.prog-bar{height:4px;background:#e5e7eb;border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:#1a56db;border-radius:2px;transition:width .5s ease}
+.prog-lbl{display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:#9ca3af}
+
+/* Question card */
+.qcard{background:#fff;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:.75rem;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.qcard-setup{border:1px solid #BFDBFE}
+.qcard-ai{border:1px solid #DDD6FE}
+.qmeta{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.qnum{font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em}
+.badge{font-size:11px;border-radius:20px;padding:2px 9px;font-weight:600}
+.badge-setup{background:#EFF6FF;color:#1a56db;border:1px solid #BFDBFE}
+.badge-ai{background:#F5F3FF;color:#7c3aed;border:1px solid #DDD6FE}
+.qtext{font-size:15px;font-weight:500;color:#111827;margin-bottom:12px;line-height:1.55}
+.hint{font-size:12px;color:#9ca3af;margin-bottom:10px;font-style:italic}
+
+/* Options */
+.multi-note{font-size:11px;color:#1a56db;font-weight:600;margin-bottom:8px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-bottom:.75rem}
+.opt{text-align:left;padding:10px 12px;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;color:#111827;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s;width:100%}
+.opt:hover{border-color:#93C5FD;background:#EFF6FF}
+.opt.sel{background:#EFF6FF;border-color:#1a56db;color:#1e40af}
+.chk{width:17px;height:17px;border-radius:4px;border:1.5px solid #d1d5db;background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;min-width:17px}
+.opt.sel .chk{background:#1a56db;border-color:#1a56db}
+.other-inp{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #BFDBFE;background:#EFF6FF;color:#1e40af;font-size:13px;margin-top:2px}
+.other-inp:focus{outline:none;border-color:#1a56db}
+.text-ans{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;color:#111827;font-size:13px;resize:vertical;min-height:80px;line-height:1.5;margin-bottom:.75rem}
+.text-ans:focus{outline:none;border-color:#1a56db}
+.btn-next{background:#1a56db;color:#fff;border:none;padding:9px 22px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-next:hover{background:#1e40af}
+.btn-next:disabled{opacity:.4;cursor:not-allowed}
+
+/* States */
+.ai-thinking{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:12px;margin-bottom:.75rem;font-size:13px;color:#7c3aed}
+.spinner{width:18px;height:18px;border:2px solid #DDD6FE;border-top-color:#7c3aed;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Done */
+.done-card{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:14px;padding:2rem;text-align:center;margin-bottom:1.25rem}
+.done-icon{font-size:40px;margin-bottom:10px}
+.done-title{font-size:20px;font-weight:700;color:#1e3a5f;margin-bottom:6px}
+.done-sub{font-size:14px;color:#1e40af;margin-bottom:1.5rem}
+.export-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn-exp{background:transparent;padding:9px 18px;border-radius:8px;border:1px solid;font-size:13px;font-weight:500;cursor:pointer}
+.btn-csv{border-color:#1a56db;color:#1a56db}.btn-csv:hover{background:#EFF6FF}
+.btn-word{border-color:#1d6f42;color:#1d6f42}.btn-word:hover{background:#f0fdf4}
+
+/* Session log */
+.log-section{margin-top:1.5rem}
+.log-lbl{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem}
+.log-row{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:12px}
+.log-n{color:#9ca3af;font-size:11px;padding-top:2px}
+.log-q{color:#6b7280;margin-bottom:2px}
+.log-a{color:#111827;font-weight:500}
+.log-tag{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-top:2px}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal{background:#fff;border-radius:16px;max-width:700px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.2)}
+.modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:16px;font-weight:700;color:#1e3a5f}
+.modal-close{background:transparent;border:none;font-size:22px;color:#9ca3af;cursor:pointer;line-height:1;padding:0 4px}
+.modal-close:hover{color:#111}
+.modal-body{padding:1.5rem;overflow-y:auto;flex:1}
+.level-toggle{display:flex;gap:8px;margin-bottom:1.25rem}
+.btn-level{padding:7px 16px;border-radius:8px;border:1px solid #e5e7eb;background:#f9fafb;color:#6b7280;font-size:13px;font-weight:500;cursor:pointer}
+.btn-level.active{background:#1a56db;color:#fff;border-color:#1a56db}
+.sum-loading{display:flex;align-items:center;gap:12px;color:#b45309;font-size:13px;padding:2rem 0}
+.spinner-amber{width:20px;height:20px;border:2px solid #fde68a;border-top-color:#f59e0b;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.sum-section{margin-bottom:1.5rem}
+.sum-section-title{font-size:12px;font-weight:700;color:#1e3a5f;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem;padding-bottom:4px;border-bottom:2px solid #EFF6FF}
+.sum-text{font-size:13px;line-height:1.8;color:#111827;white-space:pre-wrap}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid #e5e7eb;display:flex;gap:8px;justify-content:space-between;flex-shrink:0;align-items:center;flex-wrap:wrap}
+.modal-footer-right{display:flex;gap:8px}
+.btn-mclose{background:#f3f4f6;color:#374151;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-mcopy{background:transparent;color:#1a56db;border:1px solid #BFDBFE;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-mword{background:#1d6f42;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup" class="setup">
+  <div class="setup-card">
+    <div class="setup-logo">Enterprise Discovery</div>
+    <div class="setup-title">Discovery Workshop</div>
+    <div class="setup-sub">Complete the details below to begin the session</div>
+    <div class="field"><label>Consultant name</label><input id="f-con" class="finput" placeholder="Your full name" oninput="chk()"/></div>
+    <div class="field"><label>Customer / Organisation</label><input id="f-cus" class="finput" placeholder="Customer name" oninput="chk()"/></div>
+    <div class="field"><label>Date</label><input id="f-date" class="finput" type="date" oninput="chk()"/></div>
+    <div class="field">
+      <label>Problem statement <span style="color:#9ca3af;font-weight:400">— capture before starting</span></label>
+      <textarea id="f-prob" class="prob-input" placeholder="What business problem is the customer trying to solve? e.g. 'Manual finance processes across 3 regions with no single source of truth, causing month-end delays.'" oninput="chk()"></textarea>
+    </div>
+    <button class="btn-start" id="btn-start" onclick="startWorkshop()" disabled>Start Workshop →</button>
+    <div class="setup-sid" id="setup-sid"></div>
+  </div>
+</div>
+
+<!-- WORKSHOP -->
+<div id="workshop">
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-title">Discovery Workshop</div>
+      <div class="tb-sub" id="tb-sub">Building context...</div>
+    </div>
+    <div class="tb-actions">
+      <button class="btn-pause" id="btn-pause" onclick="openModal('pause')" disabled>⏸ Pause &amp; Summarise</button>
+      <button class="btn-stop" id="btn-stop" onclick="openModal('stop')" disabled>⏹ Stop &amp; Summary</button>
+    </div>
+    <div class="tb-right">
+      <strong id="tb-cus"></strong>
+      <span id="tb-meta"></span>
+    </div>
+  </div>
+  <div class="main" id="main"></div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Workshop Summary</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="level-toggle">
+        <button class="btn-level active" id="lvl-exec" onclick="setLevel('executive')">Executive</button>
+        <button class="btn-level" id="lvl-ops" onclick="setLevel('operational')">Operational detail</button>
+      </div>
+      <div id="sum-content"><div class="sum-loading"><span class="spinner-amber"></span>Generating summary...</div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-mclose" onclick="closeModal()" id="modal-continue-btn">Close — continue workshop</button>
+      <div class="modal-footer-right">
+        <button class="btn-mcopy" onclick="copySummary()">Copy text</button>
+        <button class="btn-mword" onclick="exportWord()">↓ Download blueprint</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+var S = {
+  meta: {}, context: {}, responses: [],
+  phase: 'greenfield_brownfield',
+  currentQ: null, aiThinking: false,
+  sel: [], otherOn: false, otherVal: '', textVal: '',
+  summaryText: '', summaryLevel: 'executive', modalMode: 'pause'
+}
+
+var PHASES = ['greenfield_brownfield','current_system','functional_area','specific_focus','deep_discovery']
+var PHASE_LABELS = {
+  'greenfield_brownfield': 'Implementation Approach',
+  'current_system': 'Current Technology',
+  'functional_area': 'Functional Area',
+  'specific_focus': 'Specific Focus',
+  'deep_discovery': 'Deep Discovery'
+}
+
+function pad(n){ return String(n).padStart(2,'0') }
+function makeSid(){ var d=new Date(); return 'DW-'+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes()) }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+
+var SID = makeSid()
+document.getElementById('setup-sid').textContent = 'Session: ' + SID
+document.getElementById('f-date').value = new Date().toISOString().split('T')[0]
+
+// ── Setup ──────────────────────────────────────────────────────────────────
+function chk(){
+  var ok = document.getElementById('f-con').value.trim() &&
+           document.getElementById('f-cus').value.trim() &&
+           document.getElementById('f-date').value &&
+           document.getElementById('f-prob').value.trim().length > 10
+  document.getElementById('btn-start').disabled = !ok
+}
+
+function startWorkshop(){
+  S.meta = { consultant: document.getElementById('f-con').value.trim(), customer: document.getElementById('f-cus').value.trim(), date: document.getElementById('f-date').value, session: SID }
+  S.context = { problem: document.getElementById('f-prob').value.trim() }
+  S.responses = []; S.phase = 'greenfield_brownfield'; S.currentQ = null; resetSel()
+  document.getElementById('setup').style.display = 'none'
+  document.getElementById('workshop').style.display = 'flex'
+  document.getElementById('tb-cus').textContent = S.meta.customer
+  document.getElementById('tb-meta').textContent = S.meta.consultant + ' · ' + S.meta.date
+  fetchNext()
+}
+
+// ── Fetch next question ────────────────────────────────────────────────────
+function fetchNext(){
+  S.currentQ = null; S.aiThinking = true; resetSel(); render()
+  fetch('/api/next-question', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ phase:S.phase, context:S.context, responses:S.responses }) })
+  .then(function(r){ return r.json() })
+  .then(function(data){
+    S.aiThinking = false
+    if(data.done){ advancePhase() } else { S.currentQ = data; render() }
+  })
+  .catch(function(){
+    S.aiThinking = false
+    S.currentQ = { question:'Can you describe the main challenge you are trying to solve?', type:'text', hint:'Describe the current situation and what needs to change' }
+    render()
+  })
+}
+
+function advancePhase(){
+  var idx = PHASES.indexOf(S.phase)
+  if(S.phase === 'greenfield_brownfield' && S.context.system === 'New implementation'){
+    S.phase = 'functional_area'; fetchNext(); return
+  }
+  if(idx < PHASES.length - 1){ S.phase = PHASES[idx+1]; fetchNext() }
+  else { S.phase = 'complete'; render() }
+}
+
+// ── Submit answer ──────────────────────────────────────────────────────────
+function submitAnswer(){
+  var q = S.currentQ; if(!q) return
+  var answer = ''
+  if(q.type === 'text'){
+    answer = S.textVal.trim(); if(!answer) return
+  } else {
+    var sels = getSelections(q.options||[])
+    if(!sels.length) return
+    answer = sels.join(' | ')
+  }
+  S.responses.push({ phase: S.phase, question: q.question, answer: answer })
+  extractContext(answer)
+  resetSel()
+  updateTopbar()
+  if(S.phase !== 'deep_discovery') advancePhase(); else fetchNext()
+}
+
+function extractContext(answer){
+  if(S.phase === 'greenfield_brownfield'){ S.context.approach = answer; if(answer.toLowerCase().indexOf('greenfield') >= 0) S.context.system = 'New implementation' }
+  else if(S.phase === 'current_system') S.context.system = answer
+  else if(S.phase === 'functional_area') S.context.area = answer
+  else if(S.phase === 'specific_focus') S.context.focus = answer
+}
+
+function resetSel(){ S.sel=[]; S.otherOn=false; S.otherVal=''; S.textVal='' }
+function getSelections(opts){ var r=[]; S.sel.forEach(function(i){ if(opts[i]) r.push(opts[i]) }); if(S.otherOn&&S.otherVal.trim()) r.push('Other: '+S.otherVal.trim()); return r }
+function hasAnswer(opts){ return S.sel.length>0 || (S.otherOn&&S.otherVal.trim().length>0) }
+function toggleOpt(i){ var idx=S.sel.indexOf(i); if(idx>=0) S.sel.splice(idx,1); else S.sel.push(i); render() }
+function toggleOther(){ S.otherOn=!S.otherOn; if(!S.otherOn) S.otherVal=''; render(); if(S.otherOn){ var el=document.getElementById('other-inp'); if(el) el.focus() } }
+function onOther(v){ S.otherVal=v; var b=document.getElementById('btn-next'); if(b) b.disabled=!hasAnswer() }
+function onText(v){ S.textVal=v; var b=document.getElementById('btn-next'); if(b) b.disabled=!v.trim() }
+
+function updateTopbar(){
+  var parts=[]
+  if(S.context.approach) parts.push(S.context.approach)
+  if(S.context.system&&S.context.system!=='New implementation') parts.push(S.context.system)
+  if(S.context.area) parts.push(S.context.area)
+  if(S.context.focus) parts.push(S.context.focus)
+  document.getElementById('tb-sub').textContent = parts.length ? parts.join(' · ') : 'Building context...'
+  var has = S.responses.length > 0
+  document.getElementById('btn-pause').disabled = !has
+  document.getElementById('btn-stop').disabled = !has
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function render(){
+  var el = document.getElementById('main')
+  updateTopbar()
+  var html = ''
+
+  // Context banner
+  if(S.context.approach || S.context.area){
+    html += '<div class="ctx-banner">📋 Context: '
+    if(S.context.approach) html += '<span class="ctx-chip">'+esc(S.context.approach)+'</span>'
+    if(S.context.system&&S.context.system!=='New implementation') html += '<span class="ctx-chip">'+esc(S.context.system)+'</span>'
+    if(S.context.area) html += '<span class="ctx-chip">'+esc(S.context.area)+'</span>'
+    if(S.context.focus) html += '<span class="ctx-chip">'+esc(S.context.focus)+'</span>'
+    html += '</div>'
+  }
+
+  // Progress
+  if(S.phase !== 'complete'){
+    var pct = Math.min(Math.round(S.responses.length/12*100), 98)
+    html += '<div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:'+pct+'%"></div></div><div class="prog-lbl"><span>'+S.responses.length+' responses captured</span><span>'+esc(PHASE_LABELS[S.phase]||'')+'</span></div></div>'
+  }
+
+  // AI thinking
+  if(S.aiThinking){
+    html += '<div class="ai-thinking"><span class="spinner"></span>Generating next question...</div>'
+    html += buildLog(); el.innerHTML=html; window.scrollTo(0,0); return
+  }
+
+  // Complete
+  if(S.phase === 'complete'){
+    html += '<div class="done-card"><div class="done-icon">✓</div><div class="done-title">Discovery complete</div><div class="done-sub">'+S.responses.length+' questions answered</div><div class="export-row"><button class="btn-exp btn-csv" onclick="exportCSV()">↓ Excel Data (.csv)</button><button class="btn-exp btn-word" onclick="exportWord()">↓ Word Blueprint (.doc)</button></div></div>'
+    html += buildLog(); el.innerHTML=html; window.scrollTo(0,0); return
+  }
+
+  // Active question
+  if(S.currentQ){
+    var q = S.currentQ; var isDeep = S.phase === 'deep_discovery'
+    html += '<div class="qcard '+(isDeep?'qcard-ai':'qcard-setup')+'">'
+    html += '<div class="qmeta"><span class="qnum">Question '+(S.responses.length+1)+'</span><span class="badge '+(isDeep?'badge-ai':'badge-setup')+'">'+(isDeep?'✦ AI follow-up':esc(PHASE_LABELS[S.phase]||''))+'</span></div>'
+    html += '<div class="qtext">'+esc(q.question)+'</div>'
+    if(q.hint) html += '<div class="hint">'+esc(q.hint)+'</div>'
+
+    if(q.type === 'text'){
+      html += '<textarea class="text-ans" id="text-ans" placeholder="'+(q.hint?esc(q.hint):'Type your answer...')+'" oninput="onText(this.value)">'+esc(S.textVal)+'</textarea>'
+      html += '<button class="btn-next" id="btn-next" onclick="submitAnswer()" '+(S.textVal.trim()?'':'disabled')+'>Save answer</button>'
+    } else {
+      html += '<div class="multi-note">Select all that apply — then click Next</div><div class="opts">'
+      ;(q.options||[]).forEach(function(opt,i){
+        var sel = S.sel.indexOf(i) >= 0
+        html += '<button class="opt'+(sel?' sel':'')+'" onclick="toggleOpt('+i+')">'+'<span class="chk">'+(sel?'✓':'')+'</span>'+esc(opt)+'</button>'
+      })
+      html += '<button class="opt'+(S.otherOn?' sel':'')+'" onclick="toggleOther()" style="font-style:italic;color:'+(S.otherOn?'':'#6b7280')+'"><span class="chk">'+(S.otherOn?'✓':'')+'</span>Other — describe your situation</button>'
+      if(S.otherOn) html += '<input class="other-inp" id="other-inp" value="'+esc(S.otherVal)+'" placeholder="Type here..." oninput="onOther(this.value)"/>'
+      html += '</div>'
+      html += '<button class="btn-next" id="btn-next" onclick="submitAnswer()" '+(hasAnswer(q.options)?'':'disabled')+'>Next →</button>'
+    }
+    html += '</div>'
+  }
+
+  html += buildLog()
+  el.innerHTML = html
+  window.scrollTo(0,0)
+}
+
+function buildLog(){
+  if(!S.responses.length) return ''
+  var html = '<div class="log-section"><div class="log-lbl">Session log ('+S.responses.length+')</div>'
+  S.responses.forEach(function(r,i){
+    html += '<div class="log-row"><span class="log-n">'+(i+1)+'</span><div>'
+    html += '<div class="log-q">'+esc(r.question)+'</div>'
+    html += '<div class="log-a">'+esc(r.answer)+'</div>'
+    html += '<div class="log-tag">'+esc(PHASE_LABELS[r.phase]||r.phase)+'</div>'
+    html += '</div></div>'
+  })
+  html += '</div>'
+  return html
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────
+function openModal(mode){
+  S.modalMode = mode; S.summaryText = ''
+  document.getElementById('modal').style.display = 'flex'
+  document.getElementById('modal-title').textContent = mode === 'stop' ? '⏹ Final Summary' : '⏸ Workshop Summary'
+  document.getElementById('modal-continue-btn').textContent = mode === 'stop' ? 'Back to workshop' : 'Close — continue workshop'
+  setLevel(S.summaryLevel)
+}
+
+function closeModal(){ document.getElementById('modal').style.display = 'none' }
+
+function setLevel(level){
+  S.summaryLevel = level
+  document.getElementById('lvl-exec').className = 'btn-level'+(level==='executive'?' active':'')
+  document.getElementById('lvl-ops').className = 'btn-level'+(level==='operational'?' active':'')
+  loadSummary()
+}
+
+function loadSummary(){
+  document.getElementById('sum-content').innerHTML = '<div class="sum-loading"><span class="spinner-amber"></span>Generating '+S.summaryLevel+' summary...</div>'
+  fetch('/api/summarise', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ responses:S.responses, context:S.context, level:S.summaryLevel }) })
+  .then(function(r){ return r.json() })
+  .then(function(data){ S.summaryText = data.summary||''; renderSummary() })
+  .catch(function(){ document.getElementById('sum-content').innerHTML = '<p style="color:#ef4444;font-size:13px">Could not generate summary. Check your connection.</p>' })
+}
+
+function renderSummary(){
+  var text = S.summaryText
+  var parts = text.split(/(?=\d+\.\s+[A-Z])/g)
+  var html = parts.map(function(s){
+    s = s.trim(); if(!s) return ''
+    var first = s.split('\n')[0]
+    var rest = s.split('\n').slice(1).join('\n').trim()
+    return '<div class="sum-section"><div class="sum-section-title">'+esc(first)+'</div><div class="sum-text">'+esc(rest)+'</div></div>'
+  }).join('')
+  document.getElementById('sum-content').innerHTML = html || '<div class="sum-text">'+esc(text)+'</div>'
+}
+
+function copySummary(){
+  var el = document.getElementById('sum-content')
+  navigator.clipboard.writeText(el ? el.innerText : '').then(function(){
+    var b = document.querySelector('.btn-mcopy'); if(b){ b.textContent='Copied!'; setTimeout(function(){ b.textContent='Copy text' },2000) }
+  })
+}
+
+function exportCSV(){
+  fetch('/api/export-csv', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ meta:S.meta, responses:S.responses, context:S.context }) })
+  .then(function(r){ return r.blob() })
+  .then(function(b){ var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Workshop_'+S.meta.customer.replace(/\s+/g,'_')+'_'+S.meta.date+'.csv'; a.click() })
+}
+
+function exportWord(){
+  fetch('/api/export-word', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ meta:S.meta, responses:S.responses, context:S.context, summary:S.summaryText, level:S.summaryLevel }) })
+  .then(function(r){ return r.blob() })
+  .then(function(b){ var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Blueprint_'+S.meta.customer.replace(/\s+/g,'_')+'_'+S.meta.date+'.doc'; a.click() })
+}
+</script>
+</body>
+</html>
