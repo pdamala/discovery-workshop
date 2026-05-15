@@ -82,58 +82,96 @@ app.post('/api/next-question', async function(req, res) {
   }
 
   if (phase === 'deep_discovery') {
-    var deepCount = responses.filter(function(r){ return r.phase === 'deep_discovery' }).length
-    // Hard cap — after 6 questions always complete
+    // Only count deep_discovery responses
+    var deepResps = responses.filter(function(r){ return r.phase === 'deep_discovery' })
+    var deepCount = deepResps.length
+
+    // Hard cap
     if (deepCount >= 6) return res.json({ done: true })
 
-    var history = responses.map(function(r){ return 'Q: ' + r.question + '\nA: ' + r.answer }).join('\n\n')
+    // Build history from deep discovery answers only — cleaner context for Claude
+    var deepHistory = deepResps.map(function(r, i){
+      return (i+1) + '. Q: ' + r.question + '\n   A: ' + r.answer
+    }).join('\n\n')
 
-    var deepPrompt = [
-      'You are a senior enterprise transformation consultant doing blueprint discovery.',
-      'Customer context:',
-      'Problem: ' + (context.problem || ''),
-      'Approach: ' + (context.approach || ''),
-      'System: ' + (context.system || ''),
-      'Area: ' + (context.area || ''),
-      'Focus: ' + (context.focus || ''),
+    // Clean up context values — strip pipe-joined multi-selects to first item
+    var cleanArea = (context.area || 'the functional area').split('|')[0].trim()
+    var cleanSystem = (context.system || 'their platform').split('|')[0].trim()
+    var cleanFocus = (context.focus || '').split('|')[0].trim()
+
+    var lines = [
+      'You are a senior enterprise transformation consultant running a blueprint discovery workshop.',
       '',
-      'Questions answered so far (' + deepCount + ' of max 6):',
-      history,
+      'SESSION CONTEXT:',
+      '- Problem the customer wants to solve: ' + (context.problem || 'Not specified'),
+      '- Implementation approach: ' + (context.approach || 'Not specified'),
+      '- Technology platform: ' + cleanSystem,
+      '- Functional area in scope: ' + cleanArea,
+      '- Specific focus: ' + (cleanFocus || 'Not yet determined'),
       '',
-      'Ask the single most valuable next blueprint question. Uncover: current state, future state, pain points, key design decisions, integration or migration needs.',
-      'Rules: build on the last answer, be specific to their system and area, never repeat.',
-      deepCount >= 5 ? 'This is the LAST question — make it count, then set done:true in your NEXT call.' : '',
+      deepCount === 0 ? 'This is the FIRST blueprint discovery question. Start with the most important current-state question for ' + cleanArea + ' on ' + cleanSystem + '.' : '',
+      deepCount > 0 ? ('DISCOVERY SO FAR (' + deepCount + ' questions answered):\n' + deepHistory) : '',
       '',
-      'Return ONLY valid JSON:',
-      'Options: {"done":false,"question":"...","type":"options","options":["A","B","C","D"]}',
-      'Free text: {"done":false,"question":"...","type":"text","hint":"e.g. ..."}',
-      'If truly complete: {"done":true}'
+      'YOUR TASK: Ask the single most valuable NEXT question to build the solution blueprint.',
+      'The question must:',
+      '1. Build directly on the LAST answer given (if any) — probe what was just revealed',
+      '2. Be specific to ' + cleanSystem + ' and ' + cleanArea + ' — use real terminology',
+      '3. Uncover ONE of: current process detail, key pain point, future state requirement, design decision, integration need, data migration scope, or user/change impact',
+      '4. NOT repeat any question already asked',
+      '',
+      'IMPORTANT: Return ONLY a JSON object. No explanation, no markdown, no text before or after.',
+      '',
+      'If asking a multiple-choice question:',
+      '{"done":false,"question":"Your question here?","type":"options","options":["Specific option A","Specific option B","Specific option C","Specific option D"]}',
+      '',
+      'If asking for a free-text answer:',
+      '{"done":false,"question":"Your question here?","type":"text","hint":"e.g. a concrete example"}',
+      '',
+      'ONLY return {"done":true} if you have genuinely covered current state, future state, key pain points, and main design decisions. Do not return done:true for the first 3 questions.'
     ].filter(Boolean).join('\n')
 
     try {
       var message = await client.messages.create({
-        model: 'claude-sonnet-4-5', max_tokens: 500,
-        messages: [{ role: 'user', content: deepPrompt }]
+        model: 'claude-sonnet-4-5',
+        max_tokens: 600,
+        messages: [{ role: 'user', content: lines }]
       })
-      var raw = (message.content.find(function(b){ return b.type==='text' })||{}).text || '{}'
-      var clean = raw.replace(/```json/g,'').replace(/```/g,'').trim()
-      var result = JSON.parse(clean)
-      // Safety: if done:true but fewer than 3 deep questions, keep going
+
+      var rawText = (message.content.find(function(b){ return b.type === 'text' }) || {}).text || ''
+
+      // Robust JSON extraction — find the first { ... } block
+      var jsonMatch = rawText.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) throw new Error('No JSON found in response: ' + rawText.substring(0, 200))
+
+      var result = JSON.parse(jsonMatch[0])
+
+      // Safety guards
+      if (typeof result.done !== 'boolean') result.done = false
       if (result.done && deepCount < 3) {
+        // Too early to stop — force another question
         result.done = false
-        result.question = 'What is the biggest pain point in your current ' + (context.area || 'process') + ' that this project must solve?'
+        result.question = 'How is the current ' + cleanArea + ' process managed today, and what are the main manual steps or bottlenecks?'
         result.type = 'text'
-        result.hint = 'e.g. manual reconciliation, lack of real-time visibility, data in multiple systems'
+        result.hint = 'e.g. spreadsheets, manual approvals, end-of-month reconciliation taking 5 days'
+        delete result.options
       }
+      if (!result.done && !result.question) throw new Error('Missing question in result')
+
       return res.json(result)
+
     } catch(err) {
       console.error('deep_discovery error:', err.message)
-      return res.json({
-        done: false,
-        question: 'What is the biggest pain point in your current ' + (context.area || 'process') + ' that this project must solve?',
-        type: 'text',
-        hint: 'e.g. manual processes, lack of visibility, disconnected systems'
-      })
+      // Contextual fallback questions based on how far we are
+      var fallbacks = [
+        { question: 'How is your current ' + cleanArea + ' process managed today?', type: 'text', hint: 'e.g. manual spreadsheets, legacy system, paper-based approvals' },
+        { question: 'What are the biggest pain points or inefficiencies in the current process?', type: 'options', options: ['Manual and time-consuming', 'Data quality and accuracy issues', 'Lack of real-time visibility', 'Poor system integration', 'Compliance and audit challenges', 'Other'] },
+        { question: 'What does the ideal future state look like for ' + cleanArea + '?', type: 'text', hint: 'Describe what success looks like 12 months after go-live' },
+        { question: 'Who are the key users affected by this change, and how many people are involved?', type: 'text', hint: 'e.g. 50 finance users across 3 regions, 5 power users' },
+        { question: 'What data needs to be migrated from your current system into the new platform?', type: 'options', options: ['Master data only (customers, vendors, materials)', 'Open transactions (invoices, orders)', 'Full history — several years of data', 'Starting fresh — no migration needed', 'Not yet decided'] },
+        { question: 'What integrations are needed between this area and other systems?', type: 'text', hint: 'e.g. bank feeds, payroll system, CRM, external reporting tools' }
+      ]
+      var fallback = fallbacks[Math.min(deepCount, fallbacks.length - 1)]
+      return res.json({ done: false, question: fallback.question, type: fallback.type, hint: fallback.hint, options: fallback.options })
     }
   }
 
